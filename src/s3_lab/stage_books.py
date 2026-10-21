@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Download classic books and stage them in a public S3 bucket."""
+"""download books and staging them in a public bucket """
 
 import json
 import logging
@@ -14,7 +14,7 @@ from boto3.exceptions import S3UploadFailedError
 from botocore.exceptions import BotoCoreError, ClientError
 
 
-# Set up logging and one shared S3 client.
+# logging set up with S3 client
 logging.basicConfig(
     level=logging.INFO,
     format="%(levelname)s: %(message)s",
@@ -25,7 +25,7 @@ s3 = boto3.client("s3", region_name="us-east-1")
 
 
 def parse_args():
-    """Read the book list, index page, and bucket name from the command line."""
+    """ read the list of books, index, and bucket from the command line"""
     if len(sys.argv) < 4:
         log.error(
             "Usage: stage_books.py <book_urls.txt> <index.html> <bucket>"
@@ -41,7 +41,7 @@ def parse_args():
 
 
 def download_books(list_file, dest_dir):
-    """Download books and return their local paths, including existing files."""
+    """ download books, returning their local paths and existing files"""
     file_paths = []
 
     try:
@@ -54,7 +54,7 @@ def download_books(list_file, dest_dir):
         return file_paths
 
     for url in urls:
-        # Extract pg1342.txt, for example, from the URL.
+        # extract a specific page txt from thr URL
         filename = os.path.basename(urlparse(url).path)
 
         if not filename:
@@ -63,7 +63,7 @@ def download_books(list_file, dest_dir):
 
         path = os.path.join(dest_dir, filename)
 
-        # Include existing books so they can still be uploaded on a rerun.
+        # existing books can still be uploaded upon re run
         if os.path.exists(path):
             log.info("Already downloaded: %s", path)
             file_paths.append(path)
@@ -87,7 +87,7 @@ def download_books(list_file, dest_dir):
         except OSError as e:
             log.error("Error saving %s: %s", path, e)
 
-            # Remove an incomplete file so the next run can try again.
+            # removes files with errors
             try:
                 if os.path.exists(path):
                     os.remove(path)
@@ -95,7 +95,7 @@ def download_books(list_file, dest_dir):
                 log.error("Could not remove %s: %s", path, cleanup_error)
 
         finally:
-            # Pause after each attempted download.
+            # slight buffer before each run
             time.sleep(1)
 
     log.info("Books available: %s", len(file_paths))
@@ -103,7 +103,7 @@ def download_books(list_file, dest_dir):
 
 
 def create_bucket(bucket):
-    """Return True if the bucket is accessible or successfully created."""
+    """ If the bucket is accessible of if it was sucessfully created, returning True"""
     try:
         s3.head_bucket(Bucket=bucket)
         log.info("Bucket exists: %s", bucket)
@@ -112,7 +112,7 @@ def create_bucket(bucket):
     except ClientError as e:
         error_code = str(e.response["Error"]["Code"])
 
-        # A forbidden bucket is not necessarily a nonexistent bucket.
+        # error code if bucket doesnt exist
         if error_code not in ("404", "NoSuchBucket", "NotFound"):
             log.error("Bucket does not exist %s: %s", bucket, e)
             return False
@@ -122,7 +122,6 @@ def create_bucket(bucket):
         return False
 
     try:
-        # us-east-1 does not need a LocationConstraint.
         s3.create_bucket(Bucket=bucket)
         log.info("Created bucket: %s", bucket)
         return True
@@ -133,7 +132,7 @@ def create_bucket(bucket):
 
 
 def make_public(bucket):
-    """Make the bucket's objects publicly readable."""
+    """making the bucket accessible by public"""
     policy = {
         "Version": "2012-10-17",
         "Statement": [
@@ -147,7 +146,7 @@ def make_public(bucket):
     }
 
     try:
-        # Turn off bucket-level Block Public Access first.
+        # To turn off Block Public Access for one bucket
         s3.put_public_access_block(
             Bucket=bucket,
             PublicAccessBlockConfiguration={
@@ -158,7 +157,7 @@ def make_public(bucket):
             },
         )
 
-        # Then attach the public read policy.
+        # attaching the public read policy
         s3.put_bucket_policy(
             Bucket=bucket,
             Policy=json.dumps(policy),
@@ -173,11 +172,11 @@ def make_public(bucket):
 
 
 def upload_files(bucket, file_paths):
-    """Upload books to the bucket root and return the successful count."""
+    """upload the books to the bucket root and then return the successful count"""
     uploaded = 0
 
     for path in file_paths:
-        # Use pg1342.txt as the key, without the books/ folder.
+        # Use pg # as the key
         key = os.path.basename(path)
 
         try:
@@ -206,7 +205,7 @@ def upload_files(bucket, file_paths):
 
 
 def upload_index(bucket, index_path):
-    """Upload the index page as index.html."""
+    """uploading the index page and converting it to html format"""
     try:
         s3.upload_file(
             index_path,
@@ -229,7 +228,7 @@ def upload_index(bucket, index_path):
 
 
 def main():
-    """Download the corpus, prepare the bucket, and upload the files."""
+    """ executing the bucket and uploading files"""
     list_file, index_path, bucket = parse_args()
 
     file_paths = download_books(list_file, "books")
