@@ -1,3 +1,8 @@
+## My S3 buckets
+link to public bucket: https://public-szj5dq.s3.amazonaws.com/index.html
+link to book in secret bucket: ./share_book.sh https://www.gutenberg.org/cache/epub/79828/pg79828.txt secret-szj5dq 604800
+Q. When should you use a public bucket vs presigned URL?: 
+  A. Public buckets should be used when the data needs large viewership such as public information or images. While presigned URL's should be used when the files are more private and/or need controlled access.
 # Lab 06: Working with S3 Storage
 
 The goal of this lab is to get you comfortable with **Amazon S3** object storage, building on what you have learned about the command line, AWS accounts, and scripting. You will stage a collection of 100 books from [Project Gutenberg](https://www.gutenberg.org/) in a **public** bucket that anyone can browse in a web browser, and share a single book from a **private** bucket with a time-limited presigned URL.

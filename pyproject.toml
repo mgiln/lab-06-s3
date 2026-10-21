@@ -1,0 +1,20 @@
+[project]
+name = "s3-lab"
+version = "0.1.0"
+description = "S3 work for DS2022"
+readme = "README.md"
+authors = [
+    { name = "mgilin", email = "szj5dq@virginia.edu" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "boto3>=1.43.115",
+    "requests>=2.34.2",
+]
+
+[project.scripts]
+s3-lab = "s3_lab:main"
+
+[build-system]
+requires = ["uv_build>=0.12.21,<0.13.0"]
+build-backend = "uv_build"
